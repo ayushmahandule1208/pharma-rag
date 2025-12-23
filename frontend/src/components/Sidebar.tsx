@@ -99,14 +99,6 @@ export function Sidebar({ onViewChange, currentView, onClose }: SidebarProps) {
           Query
         </Button>
         <Button
-          variant={currentView === "compare" ? "default" : "ghost"}
-          className="w-full justify-start gap-3 mb-1.5"
-          onClick={() => onViewChange("compare")}
-        >
-          <ArrowLeftRight className="w-4 h-4" />
-          Compare
-        </Button>
-        <Button
           variant={currentView === "metrics" ? "default" : "ghost"}
           className="w-full justify-start gap-3"
           onClick={() => onViewChange("metrics")}

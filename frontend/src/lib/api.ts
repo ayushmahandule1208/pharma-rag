@@ -8,15 +8,32 @@ export interface Source {
   section: string;
   score: number;
   is_priority: boolean;
+  bm25_score?: number;
+  vector_score?: number;
+  rerank_score?: number;
   text?: string;
   page_start?: number;
   page_end?: number;
+}
+
+export interface Timing {
+  retrieve_ms?: number;
+  generate_ms?: number;
+  total_ms: number;
+}
+
+export interface GuardResult {
+  passed: boolean;
+  category: string;
+  confidence: number;
 }
 
 export interface QueryResponse {
   answer: string;
   query_type: string;
   sources: Source[];
+  timing?: Timing;
+  guard_result?: GuardResult;
 }
 
 export interface DocumentFamily {
@@ -46,12 +63,32 @@ export interface SystemMetrics {
   avg_score?: number;
 }
 
+export interface SearchStats {
+  total_documents: number;
+  bm25_indexed: number;
+  vector_indexed: number;
+  reranker_enabled: boolean;
+  embedding_model: string;
+  reranker_model?: string;
+}
+
 // Query the RAG system
-export async function queryRAG(question: string): Promise<QueryResponse> {
+export async function queryRAG(question: string, options?: {
+  top_k?: number;
+  use_hybrid?: boolean;
+  use_reranker?: boolean;
+  use_guard?: boolean;
+}): Promise<QueryResponse> {
   const res = await fetch(`${API_BASE}/query`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ 
+      question,
+      top_k: options?.top_k ?? 5,
+      use_hybrid: options?.use_hybrid ?? true,
+      use_reranker: options?.use_reranker ?? true,
+      use_guard: options?.use_guard ?? true,
+    }),
   });
   if (!res.ok) throw new Error("Query failed");
   return res.json();
@@ -78,3 +115,16 @@ export async function getMetrics(): Promise<SystemMetrics> {
   return res.json();
 }
 
+// Get search engine stats
+export async function getSearchStats(): Promise<SearchStats> {
+  const res = await fetch(`${API_BASE}/search/stats`);
+  if (!res.ok) throw new Error("Failed to fetch search stats");
+  return res.json();
+}
+
+// Rebuild search index
+export async function rebuildSearchIndex(): Promise<{ status: string; message: string }> {
+  const res = await fetch(`${API_BASE}/search/rebuild`, { method: "POST" });
+  if (!res.ok) throw new Error("Failed to rebuild index");
+  return res.json();
+}

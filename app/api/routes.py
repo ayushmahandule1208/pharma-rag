@@ -1,5 +1,10 @@
 """
 FastAPI routes for Pharma RAG API.
+
+Enhanced with:
+- Query guard results
+- Detailed timing metrics
+- Score breakdowns (BM25, vector, rerank)
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -20,6 +25,9 @@ router = APIRouter(prefix="/api")
 class QueryRequest(BaseModel):
     question: str
     top_k: int = 5
+    use_hybrid: bool = True
+    use_reranker: bool = True
+    use_guard: bool = True
 
 
 class SourceResponse(BaseModel):
@@ -27,15 +35,32 @@ class SourceResponse(BaseModel):
     section: str
     score: float
     is_priority: bool
+    bm25_score: Optional[float] = 0.0
+    vector_score: Optional[float] = 0.0
+    rerank_score: Optional[float] = 0.0
     text: Optional[str] = None
     page_start: Optional[int] = None
     page_end: Optional[int] = None
+
+
+class TimingResponse(BaseModel):
+    retrieve_ms: Optional[int] = 0
+    generate_ms: Optional[int] = 0
+    total_ms: int = 0
+
+
+class GuardResultResponse(BaseModel):
+    passed: bool
+    category: str
+    confidence: float
 
 
 class QueryResponse(BaseModel):
     answer: str
     query_type: str
     sources: list[SourceResponse]
+    timing: Optional[TimingResponse] = None
+    guard_result: Optional[GuardResultResponse] = None
 
 
 class MetricsResponse(BaseModel):
@@ -48,19 +73,74 @@ class MetricsResponse(BaseModel):
     avg_score: float
 
 
+class SearchStatsResponse(BaseModel):
+    total_documents: int
+    bm25_indexed: int
+    vector_indexed: int
+    reranker_enabled: bool
+    embedding_model: str
+    reranker_model: Optional[str] = None
+
+
+# ============================================================================
+# SINGLETON RAG INSTANCE (for performance)
+# ============================================================================
+
+_rag_instance = None
+
+def get_rag_instance(use_hybrid: bool = True, use_reranker: bool = True, use_guard: bool = True) -> PharmaRAG:
+    """Get or create RAG instance (cached for performance)."""
+    global _rag_instance
+    if _rag_instance is None:
+        _rag_instance = PharmaRAG(
+            use_hybrid=use_hybrid,
+            use_reranker=use_reranker,
+            use_guard=use_guard
+        )
+    return _rag_instance
+
+
 # ============================================================================
 # ROUTES
 # ============================================================================
 
 @router.post("/query", response_model=QueryResponse)
 async def query_rag(request: QueryRequest):
-    """Query the RAG system."""
+    """
+    Query the RAG system with full pipeline.
+    
+    Features:
+    - Multi-layer query guard
+    - Hybrid search (BM25 + Vector)
+    - Cross-encoder re-ranking
+    - Query classification
+    """
     try:
-        rag = PharmaRAG()
+        rag = get_rag_instance(
+            use_hybrid=request.use_hybrid,
+            use_reranker=request.use_reranker,
+            use_guard=request.use_guard
+        )
         
-        start = time.time()
         result = rag.query(request.question, top_k=request.top_k)
-        elapsed_ms = int((time.time() - start) * 1000)
+        
+        # Extract timing
+        timing = result.get("timing", {})
+        timing_response = TimingResponse(
+            retrieve_ms=timing.get("retrieve_ms", 0),
+            generate_ms=timing.get("generate_ms", 0),
+            total_ms=timing.get("total_ms", 0)
+        )
+        
+        # Extract guard result
+        guard_result = result.get("guard_result")
+        guard_response = None
+        if guard_result:
+            guard_response = GuardResultResponse(
+                passed=guard_result.get("passed", True),
+                category=guard_result.get("category", "pharmaceutical"),
+                confidence=guard_result.get("confidence", 1.0)
+            )
         
         # Log query
         db = DocumentStore()
@@ -75,7 +155,7 @@ async def query_rag(request: QueryRequest):
             num_results=len(sources),
             top_score=top_score,
             avg_score=avg_score,
-            response_time_ms=elapsed_ms
+            response_time_ms=timing.get("total_ms", 0)
         )
         
         return QueryResponse(
@@ -83,15 +163,22 @@ async def query_rag(request: QueryRequest):
             query_type=result["query_type"],
             sources=[
                 SourceResponse(
-                    drug=s["drug"],
-                    section=s["section"],
-                    score=s["score"],
-                    is_priority=s["is_priority"],
+                    drug=s.get("drug", "Unknown"),
+                    section=s.get("section", ""),
+                    score=s.get("score", 0),
+                    is_priority=s.get("is_priority", False),
+                    bm25_score=s.get("bm25_score", 0),
+                    vector_score=s.get("vector_score", 0),
+                    rerank_score=s.get("rerank_score", 0),
                 )
                 for s in sources
-            ]
+            ],
+            timing=timing_response,
+            guard_result=guard_response
         )
     except Exception as e:
+        import traceback
+        print(f"[API Error] {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -149,7 +236,47 @@ async def get_metrics():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/search/stats", response_model=SearchStatsResponse)
+async def get_search_stats():
+    """Get hybrid search engine statistics."""
+    try:
+        from app.services.hybrid_search import get_hybrid_engine
+        engine = get_hybrid_engine()
+        stats = engine.get_stats()
+        
+        return SearchStatsResponse(
+            total_documents=stats.get("total_documents", 0),
+            bm25_indexed=stats.get("bm25_indexed", 0),
+            vector_indexed=stats.get("vector_indexed", 0),
+            reranker_enabled=stats.get("reranker_enabled", False),
+            embedding_model=stats.get("embedding_model", "all-MiniLM-L6-v2"),
+            reranker_model=stats.get("reranker_model"),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/search/rebuild")
+async def rebuild_search_index():
+    """Rebuild the hybrid search index (call after adding new documents)."""
+    try:
+        from app.services.hybrid_search import get_hybrid_engine
+        engine = get_hybrid_engine()
+        engine.rebuild_indices()
+        
+        return {"status": "success", "message": "Search indices rebuilt"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "features": {
+            "hybrid_search": True,
+            "reranking": True,
+            "query_guard": True
+        }
+    }

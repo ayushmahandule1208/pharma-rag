@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { getMetrics, SystemMetrics } from "@/lib/api";
+import { getMetrics, getSearchStats, SystemMetrics, SearchStats } from "@/lib/api";
 import { 
   FolderOpen, 
   FileText, 
@@ -11,11 +11,17 @@ import {
   Clock,
   Target,
   Cpu,
-  Activity
+  Activity,
+  Search,
+  Zap,
+  Shield,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 
 export function MetricsView() {
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
+  const [searchStats, setSearchStats] = useState<SearchStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,8 +30,12 @@ export function MetricsView() {
 
   async function loadMetrics() {
     try {
-      const m = await getMetrics();
+      const [m, s] = await Promise.all([
+        getMetrics(),
+        getSearchStats().catch(() => null),
+      ]);
       setMetrics(m);
+      setSearchStats(s);
     } catch (e) {
       console.error("Failed to load metrics", e);
     } finally {
@@ -59,7 +69,7 @@ export function MetricsView() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto overflow-y-auto h-full">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">System Metrics</h1>
-        <p className="text-muted-foreground mt-1 text-sm sm:text-base">Monitor your RAG system performance</p>
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base">Industry-standard RAG pipeline performance</p>
       </div>
 
       {/* Main stats - 2 cols on mobile, 4 on larger */}
@@ -91,6 +101,38 @@ export function MetricsView() {
           value={metrics.queries_logged}
           color="text-rose-400"
           bgColor="bg-rose-400/10"
+        />
+      </div>
+
+      {/* Search Engine Features */}
+      <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+        <Search className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+        Search Engine Features
+      </h2>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <FeatureCard 
+          icon={<Zap className="w-4 h-4" />}
+          label="Hybrid Search"
+          description="BM25 + Vector"
+          enabled={true}
+        />
+        <FeatureCard 
+          icon={<Target className="w-4 h-4" />}
+          label="Re-ranking"
+          description="Cross-Encoder"
+          enabled={searchStats?.reranker_enabled ?? true}
+        />
+        <FeatureCard 
+          icon={<Shield className="w-4 h-4" />}
+          label="Query Guard"
+          description="Multi-layer"
+          enabled={true}
+        />
+        <FeatureCard 
+          icon={<Cpu className="w-4 h-4" />}
+          label="RRF Fusion"
+          description="Result Merging"
+          enabled={true}
         />
       </div>
 
@@ -142,7 +184,7 @@ export function MetricsView() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
-              {metrics.vectors || metrics.search_units}
+              {searchStats?.vector_indexed || metrics.vectors || metrics.search_units}
               <span className="text-sm sm:text-lg font-normal text-muted-foreground ml-1">vectors</span>
             </div>
           </CardContent>
@@ -158,9 +200,9 @@ export function MetricsView() {
         <div className="h-1 bg-gradient-to-r from-primary/30 via-accent/30 to-violet-400/30" />
         <CardContent className="pt-5 sm:pt-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <InfoItem label="Embedding Model" value="all-MiniLM-L6-v2" />
-            <InfoItem label="Vector Store" value="FAISS" />
-            <InfoItem label="Database" value="SQLite" />
+            <InfoItem label="Embedding Model" value={searchStats?.embedding_model || "all-MiniLM-L6-v2"} />
+            <InfoItem label="Re-ranker" value={searchStats?.reranker_model || "ms-marco-MiniLM"} />
+            <InfoItem label="Vector Store" value="FAISS + BM25" />
             <InfoItem label="LLM" value="GPT-4o-mini" />
           </div>
         </CardContent>
@@ -197,6 +239,34 @@ function MetricCard({ icon, label, value, color, bgColor }: MetricCardProps) {
         </div>
         <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight">{value}</div>
         <div className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{label}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  label: string;
+  description: string;
+  enabled: boolean;
+}
+
+function FeatureCard({ icon, label, description, enabled }: FeatureCardProps) {
+  return (
+    <Card className={`overflow-hidden ${enabled ? 'border-green-500/30' : 'border-red-500/30'}`}>
+      <CardContent className="pt-4 sm:pt-5">
+        <div className="flex items-center justify-between mb-2">
+          <div className={`${enabled ? 'text-green-500' : 'text-red-500'}`}>
+            {icon}
+          </div>
+          {enabled ? (
+            <CheckCircle2 className="w-4 h-4 text-green-500" />
+          ) : (
+            <XCircle className="w-4 h-4 text-red-500" />
+          )}
+        </div>
+        <div className="font-semibold text-sm">{label}</div>
+        <div className="text-xs text-muted-foreground">{description}</div>
       </CardContent>
     </Card>
   );

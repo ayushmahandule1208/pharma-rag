@@ -11,6 +11,10 @@ requests
 # Embeddings & Vector Store
 sentence-transformers
 numpy
+faiss-cpu
 
 # LLM (optional - for AI responses)
 openai
+
+# Cross-encoder for re-ranking (optional but recommended)
+# Already included in sentence-transformers
