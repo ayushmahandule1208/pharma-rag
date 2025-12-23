@@ -1,17 +1,28 @@
-# Environment
-.env
+# Dependencies
+node_modules/
+frontend/node_modules/
 
-# Python
+# Build outputs
+frontend/.next/
+frontend/out/
 __pycache__/
 *.pyc
-.venv/
-venv/
 
-# Data
-data/
-*.db
+# Data files (generated at runtime)
+data/raw/
+data/processed/
+data/*.db
+data/faiss_index/
+data/vectordb/
+
+# Environment
+.env
+.env.local
 
 # IDE
 .vscode/
 .idea/
 
+# OS
+.DS_Store
+Thumbs.db
