@@ -159,7 +159,7 @@ export function MetricsView() {
         <CardContent className="pt-5 sm:pt-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <InfoItem label="Embedding Model" value="all-MiniLM-L6-v2" />
-            <InfoItem label="Vector Store" value="ChromaDB" />
+            <InfoItem label="Vector Store" value="FAISS" />
             <InfoItem label="Database" value="SQLite" />
             <InfoItem label="LLM" value="GPT-4o-mini" />
           </div>
