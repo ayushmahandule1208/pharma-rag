@@ -4,13 +4,14 @@ import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatView } from "@/components/ChatView";
 import { MetricsView } from "@/components/MetricsView";
+import { CompareView } from "@/components/CompareView";
 import { Menu, X } from "lucide-react";
 
 export default function Home() {
-  const [view, setView] = useState<"chat" | "metrics">("chat");
+  const [view, setView] = useState<"chat" | "metrics" | "compare">("chat");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleViewChange = (newView: "chat" | "metrics") => {
+  const handleViewChange = (newView: "chat" | "metrics" | "compare") => {
     setView(newView);
     setSidebarOpen(false); // Close sidebar on mobile when view changes
   };
@@ -54,7 +55,9 @@ export default function Home() {
 
         {/* View content */}
         <div className="flex-1 overflow-hidden">
-          {view === "chat" ? <ChatView /> : <MetricsView />}
+          {view === "chat" && <ChatView />}
+          {view === "compare" && <CompareView />}
+          {view === "metrics" && <MetricsView />}
         </div>
       </main>
     </div>

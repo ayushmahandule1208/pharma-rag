@@ -79,4 +79,55 @@ export async function getMetrics(): Promise<SystemMetrics> {
 }
 
 
+// ============================================================================
+// DRUG COMPARISON API
+// ============================================================================
+
+export interface ComparisonResult {
+  drug1: string;
+  drug2: string;
+  indications: {
+    drug1: string[];
+    drug2: string[];
+    shared: string[];
+    unique_drug1: string[];
+    unique_drug2: string[];
+  };
+  dosing: {
+    drug1: Record<string, string>;
+    drug2: Record<string, string>;
+  };
+  side_effects: {
+    drug1: { common: string[]; serious: string[] };
+    drug2: { common: string[]; serious: string[] };
+    shared: string[];
+    unique_drug1: string[];
+    unique_drug2: string[];
+  };
+  warnings: {
+    drug1: string[];
+    drug2: string[];
+  };
+  summary: string;
+  sources: Record<string, string>;
+}
+
+// Get available drugs for comparison
+export async function getAvailableDrugs(): Promise<string[]> {
+  const res = await fetch(`${API_BASE}/drugs`);
+  if (!res.ok) throw new Error("Failed to fetch drugs");
+  const data = await res.json();
+  return data.drugs;
+}
+
+// Compare two drugs
+export async function compareDrugs(drug1: string, drug2: string): Promise<ComparisonResult> {
+  const res = await fetch(`${API_BASE}/compare`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ drug1, drug2 }),
+  });
+  if (!res.ok) throw new Error("Comparison failed");
+  return res.json();
+}
 

@@ -12,13 +12,14 @@ import {
   BarChart3,
   FolderOpen,
   Beaker,
-  X
+  X,
+  ArrowLeftRight
 } from "lucide-react";
 import { DocumentFamily, getDocuments, getVersions, DocumentVersion } from "@/lib/api";
 
 interface SidebarProps {
-  onViewChange: (view: "chat" | "metrics") => void;
-  currentView: "chat" | "metrics";
+  onViewChange: (view: "chat" | "metrics" | "compare") => void;
+  currentView: "chat" | "metrics" | "compare";
   onClose?: () => void;
 }
 
@@ -97,6 +98,14 @@ export function Sidebar({ onViewChange, currentView, onClose }: SidebarProps) {
         >
           <FolderOpen className="w-4 h-4" />
           Query
+        </Button>
+        <Button
+          variant={currentView === "compare" ? "default" : "ghost"}
+          className="w-full justify-start gap-3 mb-1.5"
+          onClick={() => onViewChange("compare")}
+        >
+          <ArrowLeftRight className="w-4 h-4" />
+          Compare
         </Button>
         <Button
           variant={currentView === "metrics" ? "default" : "ghost"}
