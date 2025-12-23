@@ -5,6 +5,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Required for GitHub Pages subdirectory deployment
+  basePath: '/pharma-rag',
+  assetPrefix: '/pharma-rag/',
 };
 
 module.exports = nextConfig;
