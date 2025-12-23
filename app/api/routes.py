@@ -8,7 +8,7 @@ import time
 import uuid
 
 from app.db import DocumentStore, VectorStore
-from app.services import PharmaRAG, MetricsService, DrugComparator
+from app.services import PharmaRAG, MetricsService
 
 router = APIRouter(prefix="/api")
 
@@ -153,36 +153,3 @@ async def get_metrics():
 async def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
-
-
-# ============================================================================
-# DRUG COMPARISON ROUTES
-# ============================================================================
-
-class CompareRequest(BaseModel):
-    drug1: str
-    drug2: str
-
-
-@router.get("/drugs")
-async def get_available_drugs():
-    """Get list of drugs available for comparison."""
-    try:
-        comparator = DrugComparator()
-        drugs = comparator.get_available_drugs()
-        return {"drugs": drugs}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/compare")
-async def compare_drugs(request: CompareRequest):
-    """Compare two drugs side-by-side."""
-    try:
-        comparator = DrugComparator()
-        result = comparator.compare(request.drug1, request.drug2)
-        return comparator.to_dict(result)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))

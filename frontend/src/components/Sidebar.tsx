@@ -12,14 +12,13 @@ import {
   BarChart3,
   FolderOpen,
   Beaker,
-  X,
-  ArrowLeftRight
+  X
 } from "lucide-react";
 import { DocumentFamily, getDocuments, getVersions, DocumentVersion } from "@/lib/api";
 
 interface SidebarProps {
-  onViewChange: (view: "chat" | "metrics" | "compare") => void;
-  currentView: "chat" | "metrics" | "compare";
+  onViewChange: (view: "chat" | "metrics") => void;
+  currentView: "chat" | "metrics";
   onClose?: () => void;
 }
 
