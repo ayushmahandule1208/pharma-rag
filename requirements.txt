@@ -1,16 +1,16 @@
-# Pharma RAG
-pdfplumber==0.11.4
-pydantic==2.10.3
-pydantic-settings==2.7.0
-requests==2.32.3
-
-# Embeddings & Vector Store (FAISS-compatible, lightweight)
-sentence-transformers==3.3.1
-numpy>=1.24.0
-
-# LLM
-openai==1.58.1
-
 # API
-fastapi==0.115.6
-uvicorn==0.34.0
+fastapi
+uvicorn[standard]
+
+# Pharma RAG
+pdfplumber
+pydantic
+pydantic-settings
+requests
+
+# Embeddings & Vector Store
+sentence-transformers
+numpy
+
+# LLM (optional - for AI responses)
+openai

@@ -1,4 +1,7 @@
-const API_BASE = "/api";
+// For GitHub Pages static deployment, use full backend URL
+const API_BASE = process.env.NEXT_PUBLIC_API_URL 
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+  : "/api";
 
 export interface Source {
   drug: string;

@@ -1,29 +1,19 @@
-# Dockerfile for PharmaRAG Backend
-# Compatible with Hugging Face Spaces (port 7860) and Render (port 8000)
-FROM python:3.11-slim
+# Read the doc: https://huggingface.co/docs/hub/spaces-sdks-docker
+FROM python:3.9
+
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:$PATH"
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+COPY --chown=user ./requirements.txt requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# Copy requirements first for caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY --chown=user . /app
 
-# Copy application code
-COPY . .
+# Create data directories
+RUN mkdir -p data/raw data/processed data/faiss_index
 
-# Create data directories with proper permissions
-RUN mkdir -p data/raw data/processed data/faiss_index && \
-    chmod -R 777 data
-
-# Expose ports (7860 for HF Spaces, 8000 for Render)
-EXPOSE 7860 8000
-
-# Default: Run HF Spaces compatible server
-# Override with CMD in platform settings if needed
-CMD ["python", "app.py"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
 
