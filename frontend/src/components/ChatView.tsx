@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChatMessage } from "@/components/ChatMessage";
 import { queryRAG, QueryResponse, Source } from "@/lib/api";
-import { Send, Loader2, Sparkles, Beaker } from "lucide-react";
+import { Send, Loader2, Sparkles, Beaker, FlaskConical, Info } from "lucide-react";
 
 interface Message {
   id: string;
@@ -19,9 +19,17 @@ interface Message {
 
 const EXAMPLE_QUERIES = [
   "What are the side effects of Ozempic?",
-  "What is Ozempic approved for?",
-  "What is the dosage for Ozempic?",
-  "How does Ozempic work?",
+  "What is Keytruda used to treat?",
+  "Eliquis dosing recommendations",
+  "Compare Ozempic vs Wegovy",
+];
+
+const AVAILABLE_DRUGS = [
+  "Ozempic", "Wegovy", "Keytruda", "Eliquis", "Humira",
+  "Jardiance", "Entresto", "Dupixent", "Stelara", "Opdivo",
+  "Xarelto", "Trulicity", "Skyrizi", "Rinvoq", "Cosentyx",
+  "Enbrel", "Tecfidera", "Ocrevus", "Tremfya", "Taltz",
+  "Otezla", "Rybelsus", "Mounjaro", "Repatha", "Praluent"
 ];
 
 export function ChatView() {
@@ -82,6 +90,15 @@ export function ChatView() {
 
   return (
     <div className="flex flex-col h-full bg-background/50">
+      {/* Demo Disclaimer Banner */}
+      <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 flex items-center gap-2 text-amber-200">
+        <FlaskConical className="w-4 h-4 flex-shrink-0" />
+        <p className="text-xs sm:text-sm">
+          <span className="font-semibold">Demo Mode:</span> This system searches {AVAILABLE_DRUGS.length} FDA-approved drug labels. 
+          <span className="hidden sm:inline"> Ask about: {AVAILABLE_DRUGS.slice(0, 5).join(", ")}, and more.</span>
+        </p>
+      </div>
+
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
         {messages.length === 0 ? (
@@ -105,6 +122,24 @@ export function ChatView() {
                   {query}
                 </button>
               ))}
+            </div>
+
+            {/* Available drugs list */}
+            <div className="mt-8 sm:mt-10 w-full max-w-2xl">
+              <div className="flex items-center gap-2 justify-center mb-3">
+                <Info className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs sm:text-sm text-muted-foreground font-medium">Available Drug Labels</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center">
+                {AVAILABLE_DRUGS.map((drug) => (
+                  <span
+                    key={drug}
+                    className="px-2.5 py-1 bg-secondary/40 border border-border/30 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-default"
+                  >
+                    {drug}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         ) : (

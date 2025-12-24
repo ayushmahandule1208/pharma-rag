@@ -132,7 +132,7 @@ export function ChatMessage({ role, content, queryType, sources, timing, guardRe
                   ),
                   // Bold text
                   strong: ({ children }) => (
-                    <strong className="font-semibold text-foreground">{children}</strong>
+                    <strong className="font-bold text-white">{children}</strong>
                   ),
                   // Code blocks
                   code: ({ children, className }) => {
@@ -236,12 +236,16 @@ function SourceCard({ source, index }: { source: Source; index: number }) {
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {source.is_priority && (
-            <CheckCircle2 className="w-4 h-4 text-accent" title="Priority section" />
+            <span title="Priority section">
+              <CheckCircle2 className="w-4 h-4 text-accent" />
+            </span>
           )}
           {/* Score breakdown tooltip */}
           <div className="flex items-center gap-1" title={`BM25: ${source.bm25_score?.toFixed(1) || 'N/A'} | Vector: ${source.vector_score?.toFixed(2) || 'N/A'} | Rerank: ${source.rerank_score?.toFixed(1) || 'N/A'}`}>
             {source.rerank_score && source.rerank_score > 0 && (
-              <Zap className="w-3 h-3 text-accent" title="Re-ranked" />
+              <span title="Re-ranked">
+                <Zap className="w-3 h-3 text-accent" />
+              </span>
             )}
             <span className="text-xs font-mono bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">
               {(displayScore * 100).toFixed(0)}%
