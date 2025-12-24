@@ -12,6 +12,14 @@
 
 ---
 
+## 🏗️ Architecture Overview
+
+<p align="center">
+  <img src="docs/architecture.png" alt="PharmaRAG Architecture" width="100%">
+</p>
+
+---
+
 ## 🎯 What This Project Demonstrates
 
 This isn't just a "PDF chatbot." It's a **carefully engineered RAG pipeline** designed for the pharmaceutical/regulatory domain, showcasing:
@@ -23,54 +31,6 @@ This isn't just a "PDF chatbot." It's a **carefully engineered RAG pipeline** de
 - **Production considerations** (caching, logging, error handling)
 
 ---
-
-## 📊 System Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        USER QUERY                                │
-└─────────────────────────┬───────────────────────────────────────┘
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  1. QUERY GUARD                                                  │
-│     ├── Pattern Matching (regex)                                 │
-│     ├── Embedding Similarity (off-topic detection)              │
-│     └── LLM Classification (edge cases)                         │
-└─────────────────────────┬───────────────────────────────────────┘
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  2. QUERY CLASSIFICATION                                         │
-│     → SAFETY | EFFICACY | DOSING | MECHANISM | INDICATION       │
-└─────────────────────────┬───────────────────────────────────────┘
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  3. HYBRID RETRIEVAL                                             │
-│     ├── BM25 (keyword matching) ──────┐                         │
-│     └── FAISS (semantic search) ──────┼── Score Fusion (RRF)    │
-└─────────────────────────┬─────────────┴─────────────────────────┘
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  4. SECTION PRIORITIZATION                                       │
-│     → Boost "Boxed Warning" for SAFETY queries                  │
-│     → Boost "Clinical Studies" for EFFICACY queries             │
-└─────────────────────────┬───────────────────────────────────────┘
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  5. CROSS-ENCODER RERANKING                                      │
-│     → ms-marco-MiniLM-L6-v2 (query-document scoring)            │
-└─────────────────────────┬───────────────────────────────────────┘
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  6. PROMPT BUILDING                                              │
-│     → Query-type specific instructions                          │
-│     → Retrieved context with source metadata                    │
-└─────────────────────────┬───────────────────────────────────────┘
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  7. LLM GENERATION (GPT-4o-mini)                                 │
-│     → Answer + Citations + Disclaimer                           │
-└─────────────────────────────────────────────────────────────────┘
-```
 
 ---
 
