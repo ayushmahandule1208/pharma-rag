@@ -10,21 +10,23 @@
     "full": "concurrently \"npm run backend\" \"npm run dev\""
   },
   "dependencies": {
+    "class-variance-authority": "0.7.0",
+    "clsx": "2.1.1",
+    "lucide-react": "0.400.0",
     "next": "14.2.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "lucide-react": "0.400.0",
-    "clsx": "2.1.1",
-    "tailwind-merge": "2.3.0",
-    "class-variance-authority": "0.7.0"
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
+    "tailwind-merge": "2.3.0"
   },
   "devDependencies": {
     "@types/node": "20.14.0",
     "@types/react": "18.3.3",
-    "typescript": "5.4.5",
-    "tailwindcss": "3.4.4",
-    "postcss": "8.4.38",
     "autoprefixer": "10.4.19",
-    "concurrently": "8.2.2"
+    "concurrently": "8.2.2",
+    "postcss": "8.4.38",
+    "tailwindcss": "3.4.4",
+    "typescript": "5.4.5"
   }
 }

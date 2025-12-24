@@ -13,6 +13,8 @@ interface Message {
   content: string;
   queryType?: string;
   sources?: Source[];
+  timing?: { retrieve_ms?: number; generate_ms?: number; total_ms: number };
+  guardResult?: { passed: boolean; category: string; confidence: number };
 }
 
 const EXAMPLE_QUERIES = [
@@ -57,6 +59,8 @@ export function ChatView() {
         content: response.answer,
         queryType: response.query_type,
         sources: response.sources,
+        timing: response.timing,
+        guardResult: response.guard_result,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -112,6 +116,8 @@ export function ChatView() {
                 content={message.content}
                 queryType={message.queryType}
                 sources={message.sources}
+                timing={message.timing}
+                guardResult={message.guardResult}
               />
             ))}
             
